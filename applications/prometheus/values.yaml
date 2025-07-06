@@ -133,4 +133,11 @@ alerting:
 
 # 규칙 설정
 rules:
-  enabled: false 
+  enabled: false
+
+# 오토스케일링 설정
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80 
