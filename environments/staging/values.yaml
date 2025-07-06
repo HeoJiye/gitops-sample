@@ -1,0 +1,31 @@
+replicaCount: 2
+
+image:
+  repository: heojiye/springboot-sample
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  hosts:
+    - host: spring-boot-sample-staging.local
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+env:
+  - name: SERVER_PORT
+    value: "8080"
+  - name: SPRING_PROFILES_ACTIVE
+    value: "staging" 

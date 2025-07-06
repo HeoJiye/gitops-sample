@@ -1,0 +1,37 @@
+replicaCount: 3
+
+image:
+  repository: heojiye/springboot-sample
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  hosts:
+    - host: spring-boot-sample.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+
+env:
+  - name: SERVER_PORT
+    value: "8080"
+  - name: SPRING_PROFILES_ACTIVE
+    value: "prod" 
