@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "grafana.fullname" . }}
+  labels:
+    {{- include "grafana.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "grafana.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "grafana.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "grafana.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: grafana
+              containerPort: 3000
+              protocol: TCP
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              value: {{ .Values.adminUser }}
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              value: {{ .Values.adminPassword }}
+            - name: GF_PATHS_DATA
+              value: {{ .Values.config.paths.data }}
+            - name: GF_PATHS_LOGS
+              value: {{ .Values.config.paths.logs }}
+            - name: GF_PATHS_PLUGINS
+              value: {{ .Values.config.paths.plugins }}
+            - name: GF_PATHS_PROVISIONING
+              value: {{ .Values.config.paths.provisioning }}
+            {{- if .Values.plugins }}
+            - name: GF_INSTALL_PLUGINS
+              value: {{ join "," .Values.plugins }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: grafana
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 30
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: grafana
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: storage
+              mountPath: {{ .Values.config.paths.data }}
+            - name: provisioning-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+      volumes:
+        - name: storage
+          {{- if .Values.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "grafana.fullname" . }}-storage
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: provisioning-datasources
+          configMap:
+            name: {{ include "grafana.fullname" . }}-datasources
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }} 

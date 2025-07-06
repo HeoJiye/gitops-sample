@@ -1,0 +1,116 @@
+replicaCount: 1
+
+image:
+  repository: grafana/grafana
+  pullPolicy: IfNotPresent
+  tag: "9.3.0"
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 472
+  runAsGroup: 472
+  runAsUser: 472
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 472
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: grafana.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# 그라파나 설정
+config:
+  paths:
+    data: /var/lib/grafana/
+    logs: /var/log/grafana
+    plugins: /var/lib/grafana/plugins
+    provisioning: /etc/grafana/provisioning
+  analytics:
+    reporting_enabled: false
+  log:
+    mode: console
+  grafana_net:
+    url: https://grafana.net
+  server:
+    domain: "{{ if (and .Values.ingress.enabled .Values.ingress.hosts) }}{{ .Values.ingress.hosts | first }}{{ end }}"
+
+# 관리자 계정 설정
+adminUser: admin
+adminPassword: admin123
+
+# 스토리지 설정
+persistence:
+  enabled: true
+  size: 1Gi
+  storageClass: ""
+  accessMode: ReadWriteOnce
+
+# 데이터소스 설정
+datasources:
+  - name: Prometheus
+    type: prometheus
+    url: http://prometheus:9090
+    access: proxy
+    isDefault: true
+
+# 대시보드 설정
+dashboards:
+  enabled: true
+  default:
+    kubernetes-cluster:
+      gnetId: 7249
+      revision: 1
+      datasource: Prometheus
+    node-exporter:
+      gnetId: 1860
+      revision: 27
+      datasource: Prometheus
+    spring-boot:
+      gnetId: 12900
+      revision: 1
+      datasource: Prometheus
+
+# 플러그인 설정
+plugins:
+  - grafana-clock-panel
+  - grafana-simple-json-datasource 

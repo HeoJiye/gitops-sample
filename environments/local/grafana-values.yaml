@@ -1,0 +1,48 @@
+replicaCount: 1
+
+image:
+  repository: grafana/grafana
+  tag: "9.3.0"
+  pullPolicy: Never  # 로컬 이미지 사용
+
+service:
+  type: NodePort
+  port: 3000
+  nodePort: 30030
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+persistence:
+  enabled: false  # 로컬에서는 영구 저장소 비활성화
+
+adminUser: admin
+adminPassword: admin123
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    url: http://prometheus.monitoring.svc.cluster.local:9090
+    access: proxy
+    isDefault: true
+
+plugins:
+  - grafana-clock-panel
+  - grafana-simple-json-datasource
+
+dashboards:
+  enabled: true
+  default:
+    kubernetes-cluster:
+      gnetId: 7249
+      revision: 1
+      datasource: Prometheus
+    spring-boot:
+      gnetId: 12900
+      revision: 1
+      datasource: Prometheus 
