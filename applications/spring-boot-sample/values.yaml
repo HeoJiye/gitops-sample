@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: heojiye/springboot-sample
   pullPolicy: IfNotPresent
-  tag: "latest"
+  tag: "v1.0.1"
 
 nameOverride: ""
 fullnameOverride: ""
